@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="de" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HabitFlow | Dein Gewohnheits-Tracker</title>
+    
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>HabitFlow</h1>
+        <p>Verfolge deine täglichen Erfolge.</p>
+    </header>
+
+    <form class="habit-form" id="habitForm">
+        <input type="text" id="habitInput" placeholder="Neue Gewohnheit hinzufügen..." required>
+        <button type="submit">Hinzufügen</button>
+    </form>
+
+    <div id="habitList"></div>
+</div>
+
+<script>
+    let habits = JSON.parse(localStorage.getItem('habits')) || [
+        { id: 1, name: 'Wasser trinken', completed: [false, false, false, false, false, false, false] },
+        { id: 2, name: 'Tägliche Meditation', completed: [false, false, false, false, false, false, false] }
+    ];
+
+    const habitForm = document.getElementById('habitForm');
+    const habitInput = document.getElementById('habitInput');
+    const habitList = document.getElementById('habitList');
+
+    function save() {
+        localStorage.setItem('habits', JSON.stringify(habits));
+        render();
+    }
+
+    function toggleDay(habitIndex, dayIndex) {
+        habits[habitIndex].completed[dayIndex] = !habits[habitIndex].completed[dayIndex];
+        save();
+    }
+
+    function removeHabit(id) {
+        habits = habits.filter(h => h.id !== id);
+        save();
+    }
+
+    function render() {
+        habitList.innerHTML = '';
+        habits.forEach((habit, hIdx) => {
+            const card = document.createElement('div');
+            card.className = 'card habit-row';
+            
+            const streakCount = habit.completed.filter(Boolean).length;
+            
+            let gridHtml = '';
+            for(let i = 0; i < 7; i++) {
+                gridHtml += `<div class="day-cell ${habit.completed[i] ? 'active' : ''}" onclick="toggleDay(${hIdx}, ${i})"></div>`;
+            }
+
+            card.innerHTML = `
+                <div class="habit-info">
+                    <h3>${habit.name}</h3>
+                    <span class="streak">Wochen-Erfolg: ${streakCount} Tage</span>
+                </div>
+                <div class="grid">${gridHtml}</div>
+                <button class="remove-btn" onclick="removeHabit(${habit.id})">Löschen</button>
+            `;
+            habitList.appendChild(card);
+        });
+    }
+
+    habitForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = habitInput.value.trim();
+        if(name) {
+            habits.push({ id: Date.now(), name, completed: Array(7).fill(false) });
+            habitInput.value = '';
+            save();
+        }
+    });
+
+    render();
+</script>
+
+</body>
+</html>
